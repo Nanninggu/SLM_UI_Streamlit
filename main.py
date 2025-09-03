@@ -26,7 +26,7 @@ st.markdown("""
     [data-testid="stDecoration"] {display: none !important;}
     .stDeployButton {display: none !important;}
     .stApp > header {display: none !important;}
-    .stApp > div:first-child {display: none !important;}
+    # .stApp > div:first-child {display: none !important;}
     iframe[title="streamlit_analytics"] {display: none !important;}
 
     .stApp { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important; }
