@@ -4,6 +4,7 @@ import time
 import re
 import threading
 from upload import show_upload_ui
+from langgraph_monitor import show_langgraph_monitor
 
 API_BASE = "http://localhost:8080/api/chat"
 LANGCHAIN_ENDPOINT = "http://localhost:8080/api/chat/ask-langchain"
@@ -635,7 +636,7 @@ if 'typing_text' not in st.session_state:
     st.session_state.typing_text = ""
 
 # Enhanced tabs with Gemini styling
-tab1, tab2 = st.tabs(["💬 AI Chat", "⬆️ Document Upload"])
+tab1, tab2, tab3 = st.tabs(["💬 AI Chat", "⬆️ Document Upload", "🔗 LangGraph 모니터링"])
 
 with tab1:
     st.markdown("""
@@ -993,3 +994,6 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
     show_upload_ui()
+
+with tab3:
+    show_langgraph_monitor()
