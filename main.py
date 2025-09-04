@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import time
 import re
+import threading
 from upload import show_upload_ui
 
 API_BASE = "http://localhost:8080/api/chat"
@@ -162,6 +163,17 @@ st.markdown("""
 
     .stTextArea > div > div > textarea::placeholder {
         color: #9aa0a6 !important;
+    }
+
+    .stTextArea > div > div > textarea:disabled {
+        background: rgba(248, 249, 250, 0.9) !important;
+        border-color: #e8eaed !important;
+        color: #9aa0a6 !important;
+        cursor: not-allowed !important;
+    }
+
+    .stTextArea > div > div > textarea:disabled::placeholder {
+        color: #bdc1c6 !important;
     }
 
     /* Custom scrollbar for textarea */
@@ -358,6 +370,247 @@ st.markdown("""
         -moz-user-select: none;
         -ms-user-select: none;
     }
+
+    /* Progress bar styling */
+    .progress-container {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e8f0fe;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4285f4, #1a73e8, #4285f4);
+        background-size: 200% 100%;
+        animation: progressShimmer 2s infinite;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    .progress-text {
+        text-align: center;
+        color: #1a73e8;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .progress-status {
+        text-align: center;
+        color: #5f6368;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    @keyframes progressShimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    /* Loading button animation */
+    .loading-button {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .loading-button::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border: 2px solid transparent;
+        border-top: 2px solid #ffffff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Typing effect for AI responses */
+    .typing-text {
+        overflow: hidden;
+        white-space: nowrap;
+        border-right: 2px solid #4285f4;
+        animation: typing 0.05s steps(1, end), blink-caret 0.75s step-end infinite;
+    }
+
+    @keyframes typing {
+        from { width: 0; }
+        to { width: 100%; }
+    }
+
+    @keyframes blink-caret {
+        from, to { border-color: transparent; }
+        50% { border-color: #4285f4; }
+    }
+
+    /* Enhanced loading dots */
+    .enhanced-loading-dots {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        margin: 0 8px;
+    }
+
+    .enhanced-loading-dots span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #4285f4;
+        animation: enhancedBounce 1.4s ease-in-out infinite both;
+    }
+
+    .enhanced-loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .enhanced-loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+    .enhanced-loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+    @keyframes enhancedBounce {
+        0%, 80%, 100% {
+            transform: scale(0.8);
+            opacity: 0.5;
+        }
+        40% {
+            transform: scale(1.2);
+            opacity: 1;
+        }
+    }
+
+    /* Pulsing effect for active elements */
+    .pulse-effect {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    /* Enhanced message animations */
+    .message-typing {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .message-typing::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 2px;
+        height: 1.2em;
+        background: #4285f4;
+        animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
+    }
+
+    /* Enhanced button states */
+    .stButton > button:disabled {
+        background: linear-gradient(135deg, #9aa0a6, #5f6368) !important;
+        cursor: not-allowed !important;
+        transform: none !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .stButton > button:disabled:hover {
+        transform: none !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Success animation for completed actions */
+    .success-animation {
+        animation: successPulse 0.6s ease-out;
+    }
+
+    @keyframes successPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    /* Enhanced progress bar with glow effect */
+    .progress-fill {
+        box-shadow: 0 0 10px rgba(66, 133, 244, 0.3);
+    }
+
+    /* Smooth transitions for all interactive elements */
+    .stButton > button, .stTextArea > div > div > textarea, .stTextInput > div > div > input {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    /* Enhanced focus states */
+    .stTextArea > div > div > textarea:focus, .stTextInput > div > div > input:focus {
+        transform: scale(1.01);
+        box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1), 0 4px 20px rgba(66, 133, 244, 0.15) !important;
+    }
+
+    /* Loading state for the entire chat area */
+    .chat-loading {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+
+    /* Enhanced message bubbles with better shadows */
+    .chat-message.user-message {
+        box-shadow: 0 6px 20px rgba(66, 133, 244, 0.25) !important;
+    }
+
+    .chat-message.ai-message {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    /* Dynamic dots animation */
+    .dynamic-dots {
+        display: inline-block;
+        position: relative;
+        width: 20px;
+        text-align: left;
+    }
+
+    .dynamic-dots::after {
+        content: '';
+        animation: dynamicDots 1.8s infinite;
+        font-weight: bold;
+    }
+
+    @keyframes dynamicDots {
+        0%, 16.66% { content: ''; }
+        33.33% { content: '.'; }
+        50% { content: '..'; }
+        66.66% { content: '...'; }
+        83.33%, 100% { content: ''; }
+    }
+
+    /* Enhanced progress status with dynamic dots */
+    .progress-status-dynamic {
+        text-align: center;
+        color: #5f6368;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        min-height: 1.2em;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -374,6 +627,12 @@ if 'chat_messages' not in st.session_state:
     st.session_state.chat_messages = []
 if 'current_response' not in st.session_state:
     st.session_state.current_response = ""
+if 'is_processing' not in st.session_state:
+    st.session_state.is_processing = False
+if 'progress' not in st.session_state:
+    st.session_state.progress = 0
+if 'typing_text' not in st.session_state:
+    st.session_state.typing_text = ""
 
 # Enhanced tabs with Gemini styling
 tab1, tab2 = st.tabs(["💬 AI Chat", "⬆️ Document Upload"])
@@ -386,12 +645,13 @@ with tab1:
     </div>
     """, unsafe_allow_html=True)
 
-    # Display chat history
+    # Display chat history with loading state
     chat_container = st.container()
+    loading_class = "chat-loading" if st.session_state.is_processing else ""
 
     with chat_container:
         if st.session_state.chat_messages:
-            st.markdown('<div class="chat-history-container">', unsafe_allow_html=True)
+            st.markdown(f'<div class="chat-history-container {loading_class}">', unsafe_allow_html=True)
 
             for i, message in enumerate(st.session_state.chat_messages):
                 if message['role'] == 'user':
@@ -402,9 +662,12 @@ with tab1:
                     </div>
                     """, unsafe_allow_html=True)
                 else:
+                    # Add typing effect for AI messages
+                    typing_class = "message-typing" if i == len(
+                        st.session_state.chat_messages) - 1 and st.session_state.is_processing else ""
                     st.markdown(f"""
                     <div class="chat-message ai-message">
-                        <div class="message-content">{message['content']}</div>
+                        <div class="message-content {typing_class}" id="ai-message-{i}">{message['content']}</div>
                         <div class="message-time">{message['timestamp']}</div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -499,6 +762,65 @@ c
     </style>
     """, unsafe_allow_html=True)
 
+    # Add JavaScript for enhanced UI interactions
+    st.markdown("""
+    <script>
+    // Progress bar animation
+    function updateProgress(progress) {
+        const progressFill = document.querySelector('.progress-fill');
+        const progressText = document.querySelector('.progress-text');
+        if (progressFill && progressText) {
+            progressFill.style.width = progress + '%';
+            progressText.textContent = 'Processing: ' + progress + '%';
+        }
+    }
+
+    // Typing effect for AI responses
+    function typeText(element, text, speed = 30) {
+        let i = 0;
+        element.innerHTML = '';
+        const timer = setInterval(() => {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+            } else {
+                clearInterval(timer);
+                // Remove typing cursor after completion
+                element.classList.remove('message-typing');
+            }
+        }, speed);
+    }
+
+    // Enhanced loading animation
+    function showLoadingAnimation(button) {
+        button.classList.add('loading-button');
+        button.disabled = true;
+        button.innerHTML = '<span class="enhanced-loading-dots"><span></span><span></span><span></span></span> Processing...';
+    }
+
+    function hideLoadingAnimation(button, originalText) {
+        button.classList.remove('loading-button');
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+
+    // Simulate progress for better UX
+    function simulateProgress() {
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            updateProgress(Math.floor(progress));
+            
+            if (progress >= 90) {
+                clearInterval(interval);
+            }
+        }, 200);
+        return interval;
+    }
+    </script>
+    """, unsafe_allow_html=True)
+
     # Always show input form at the bottom
     st.markdown("---")
 
@@ -512,12 +834,24 @@ c
         height=100,
         key=input_key,
         label_visibility="collapsed",
-        help="💡 Press Enter to create new lines. Click Send to submit."
+        help="💡 Press Enter to create new lines. Click Send to submit.",
+        disabled=st.session_state.is_processing
     )
 
-    # Send button
-    if st.button("🚀 Send Message", key="send_button", use_container_width=True):
+    # Send button with enhanced loading state
+    button_text = "🚀 Send Message"
+    if st.session_state.is_processing:
+        button_text = '<span class="enhanced-loading-dots"><span></span><span></span><span></span></span> Processing...'
+
+    send_button_clicked = st.button(button_text, key="send_button", use_container_width=True,
+                                    disabled=st.session_state.is_processing)
+
+    if send_button_clicked:
         if question.strip():
+            # Set processing state
+            st.session_state.is_processing = True
+            st.session_state.progress = 0
+
             # Add user message to chat history
             import datetime
 
@@ -528,31 +862,117 @@ c
             }
             st.session_state.chat_messages.append(user_message)
 
-            # Process AI response
-            displayed_text = ""
+            # Show progress bar (only once)
+            progress_placeholder = st.empty()
+
+            # Process AI response with progress simulation
             ai_response = ""
 
-            with st.spinner("🤖 AI is thinking..."):
-                try:
-                    # Use langchain endpoint
-                    resp = requests.post(LANGCHAIN_ENDPOINT, json={"question": question})
+            try:
+                # Simulate progress updates
+                progress_values = [10, 25, 40, 55, 70, 85, 95, 100]
+                progress_statuses = [
+                    "🤖 AI is analyzing your question... ",
+                    "📚 Searching through documents...",
+                    "🧠 Processing information...",
+                    "💭 Generating response...",
+                    "✨ Almost ready...",
+                    "🎯 Finalizing answer..."
+                ]
 
-                    if resp.ok:
-                        ai_response = resp.json().get("answer", "").replace("**", "")
-                        displayed_text = ai_response
-                    else:
-                        ai_response = "❌ Failed to process your question. Please try again."
+                # Start progress simulation
+                for i, progress in enumerate(progress_values[:-1]):
+                    status_text = progress_statuses[i % len(progress_statuses)]
+                    progress_placeholder.markdown(f"""
+                    <div class="progress-container">
+                        <div class="progress-text">Processing: {progress}%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {progress}%;"></div>
+                        </div>
+                        <div class="progress-status-dynamic">
+                            {status_text}<span class="dynamic-dots"></span>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    time.sleep(0.4)  # Simulate processing time
 
-                except Exception as e:
-                    ai_response = f"🔌 Connection error: {str(e)}"
+                # Use langchain endpoint
+                resp = requests.post(LANGCHAIN_ENDPOINT, json={"question": question})
 
-            # Add AI response to chat history
+                if resp.ok:
+                    ai_response = resp.json().get("answer", "").replace("**", "")
+                    # Final progress update
+                    progress_placeholder.markdown(f"""
+                    <div class="progress-container">
+                        <div class="progress-text">Processing: 100%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%;"></div>
+                        </div>
+                        <div class="progress-status-dynamic">✅ Response ready!</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    time.sleep(0.5)
+                else:
+                    ai_response = "❌ Failed to process your question. Please try again."
+                    progress_placeholder.markdown(f"""
+                    <div class="progress-container">
+                        <div class="progress-text">Processing: 100%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%;"></div>
+                        </div>
+                        <div class="progress-status-dynamic">❌ Error occurred</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            except Exception as e:
+                ai_response = f"🔌 Connection error: {str(e)}"
+                progress_placeholder.markdown(f"""
+                <div class="progress-container">
+                    <div class="progress-text">Processing: 100%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%;"></div>
+                    </div>
+                    <div class="progress-status-dynamic">❌ Connection error</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # Add AI response to chat history with typing effect
             ai_message = {
                 'role': 'assistant',
                 'content': add_newline_before_numbered_list(ai_response),
                 'timestamp': datetime.datetime.now().strftime("%H:%M")
             }
             st.session_state.chat_messages.append(ai_message)
+            st.session_state.is_processing = False
+
+            # Clear progress container
+            progress_placeholder.empty()
+
+            # Add typing effect script for the new message
+            st.markdown(f"""
+            <script>
+            // Apply typing effect to the latest AI message
+            setTimeout(() => {{
+                const latestMessage = document.querySelector('#ai-message-{len(st.session_state.chat_messages) - 1}');
+                if (latestMessage) {{
+                    const fullText = latestMessage.textContent;
+                    latestMessage.textContent = '';
+                    latestMessage.classList.add('message-typing');
+                    
+                    let i = 0;
+                    const timer = setInterval(() => {{
+                        if (i < fullText.length) {{
+                            latestMessage.textContent += fullText.charAt(i);
+                            i++;
+                        }} else {{
+                            clearInterval(timer);
+                            latestMessage.classList.remove('message-typing');
+                        }}
+                    }}, 30);
+                }}
+            }}, 100);
+            </script>
+            """, unsafe_allow_html=True)
 
             # Refresh to show new messages
             st.rerun()
